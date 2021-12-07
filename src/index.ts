@@ -43,20 +43,40 @@ const getToken = async () => {
   }
 }
 
-const getUsersByRoleId = async () => {
+const getUsersByRoleId = async (roleId: string) => {
   try {
-    const usersByRole = new Map();
-    const token = await getToken();
-    const headers = { authorization: `Bearer ${token}` }
+    const management = new ManagementClient({
+      "domain": process.env.AUTH0_DOMAIN!,
+      "clientId": process.env.AUTH0_USER_ADMIN_CLIENT_ID!,
+      "clientSecret": process.env.AUTH0_USER_ADMIN_CLIENT_SECRET!,
+      "scope": "read:users",
+    });
 
-    for (const role of roles) {
-      const url = `${process.env.AUTH0_BASE_URL}/api/v2/roles/${role.id}/users`;
-      const res = await axios.get(url, { headers })
-      usersByRole.set(role.name, res.data);
+    let page = 0;
+    const per_page = 100;
+    let total = 0;
+    let users: any[] = [];
+
+    while (page * per_page <= total) {
+      const res = await management.getUsersInRole({
+        include_totals: true,
+        id: roleId,
+        page,
+        per_page
+      });
+
+      total = res.total;
+      page = page + 1;
+      
+      users = [...users, ...res.users]
     }
 
-    console.log(usersByRole)
+    const json2csvParser = await new Parser();
+    const csv = await json2csvParser.parse(users);
 
+    fs.writeFileSync(`${__dirname}/../dumps/${Date.now()}_users_for_role_${roleId}.csv`, csv, 'utf8')
+
+    return;
 
   } catch (error) {
     console.error(error)
@@ -71,7 +91,7 @@ const getUsers = async () => {
       "clientId": process.env.AUTH0_USER_ADMIN_CLIENT_ID!,
       "clientSecret": process.env.AUTH0_USER_ADMIN_CLIENT_SECRET!,
       "scope": "read:users",
-    })
+    });
 
     let page = 0;
     const per_page = 100;
@@ -119,5 +139,6 @@ const getUsers = async () => {
   }
 }
 
-getUsers();
+// getUsers();
+getUsersByRoleId(process.env.ROLE_ID_SPONSORSHIP as string)
 
