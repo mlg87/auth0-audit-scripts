@@ -55,7 +55,7 @@ const getUsersByRoleId = async (roleId: string) => {
     let page = 0;
     const per_page = 100;
     let total = 0;
-    let users: any[] = [];
+    let usersForRole: any[] = [];
 
     while (page * per_page <= total) {
       const res = await management.getUsersInRole({
@@ -68,11 +68,34 @@ const getUsersByRoleId = async (roleId: string) => {
       total = res.total;
       page = page + 1;
       
-      users = [...users, ...res.users]
+      usersForRole = [...usersForRole, ...res.users]
     }
 
+    let users: any[] = [];
+    for (const user of usersForRole) {
+      const res = await management.getUser({
+        id: user.user_id
+      });
+
+      users = [...users, {...res}]
+    }
+
+    const usersForCsv = users.map(u => ({
+      academic_partner_id: u.app_metadata.academic_partner_id,
+      created_at: u.created_at,
+      email: u.email,
+      family_name: u.user_metadata.family_name,
+      given_name: u.user_metadata.given_name,
+      last_login: u.last_login,
+      last_password_reset: u.last_password_reset,
+      logins_count: u.logins_count,
+      name: u.name,
+      role_id: u.app_metadata.role_id,
+      user_id: u.user_id
+    }));
+
     const json2csvParser = await new Parser();
-    const csv = await json2csvParser.parse(users);
+    const csv = await json2csvParser.parse(usersForCsv);
 
     fs.writeFileSync(`${__dirname}/../dumps/${Date.now()}_users_for_role_${roleId}.csv`, csv, 'utf8')
 
@@ -80,7 +103,7 @@ const getUsersByRoleId = async (roleId: string) => {
 
   } catch (error) {
     console.error(error)
-    
+    return;
   }
 }
 
