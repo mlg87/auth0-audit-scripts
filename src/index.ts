@@ -120,7 +120,7 @@ const getUsers = async () => {
     const per_page = 100;
     let total = 0;
     let users: any[] = [];
-    const q = `identities.connection=model-m-users AND (app_metadata.role_id: ${process.env.ROLE_ID_GUILD_SUPER_USER} OR app_metadata.role_id: ${process.env.ROLE_ID_GUILD_ADMIN} OR app_metadata.role_id: ${process.env.ROLE_ID_GUILD_MEMBER})`
+    const q = `identities.connection=model-m-users AND (app_metadata.role_id: ${process.env.ROLE_ID_GUILD_SUPER_USER} OR app_metadata.role_id: ${process.env.ROLE_ID_GUILD_ADMIN} OR app_metadata.role_id: ${process.env.ROLE_ID_GUILD_MEMBER} OR app_metadata.role_id: ${process.env.ROLE_ID_AP_MEMBER} OR app_metadata.role_id: ${process.env.ROLE_ID_AP_ADMIN} OR app_metadata.role_id: ${process.env.ROLE_ID_MULTI_AP_ADMIN})`
     
     while (page * per_page <= total) {
       const res = await management.getUsers({
@@ -162,6 +162,6 @@ const getUsers = async () => {
   }
 }
 
-// getUsers();
-getUsersByRoleId(process.env.ROLE_ID_SPONSORSHIP as string)
+getUsers();
+// getUsersByRoleId(process.env.ROLE_ID_SPONSORSHIP as string)
 
