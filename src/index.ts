@@ -3,6 +3,8 @@ import { config } from 'dotenv';
 import { ManagementClient } from 'auth0'
 import fs from 'fs'
 import { Parser } from 'json2csv';
+import { logger } from "./utils/logger";
+import formatISO from "date-fns/formatISO";
 
 
 config();
@@ -109,6 +111,8 @@ const getUsersByRoleId = async (roleId: string) => {
 
 const getUsers = async () => {
   try {
+    logger.info('Starting getUsers')
+
     const management = new ManagementClient({
       "domain": process.env.AUTH0_DOMAIN!,
       "clientId": process.env.AUTH0_USER_ADMIN_CLIENT_ID!,
@@ -137,6 +141,8 @@ const getUsers = async () => {
     }
 
     const usersForCsv = users.map(u => ({
+      academic_partner_id: u.app_metadata.academic_partner_id,
+      allowed_ap_ids: u.app_metadata.allowed_ap_ids,
       created_at: u.created_at,
       email: u.email,
       family_name: u.user_metadata.family_name,
@@ -146,18 +152,22 @@ const getUsers = async () => {
       logins_count: u.logins_count,
       name: u.name,
       role_id: u.app_metadata.role_id,
-      user_id: u.user_id
+      user_id: u.user_id,
+      uuid: u.app_metadata.uuid
     }))
 
     const json2csvParser = await new Parser();
     const csv = await json2csvParser.parse(usersForCsv);
 
-    fs.writeFileSync(`${__dirname}/../dumps/${Date.now()}_guild_users.csv`, csv, 'utf8')
+    const fileName = `${__dirname}/../dumps/${formatISO(new Date())}_guild_users.csv`
+    fs.writeFileSync(fileName, csv, 'utf8');
+
+    logger.info(`Successfully wrote ${fileName} to /dumps`)
 
     return;
 
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     return;
   }
 }
