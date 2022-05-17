@@ -141,7 +141,9 @@ const getUsers = async (userType: string) => {
         include_totals: true,
         q,
         page,
-        per_page
+        per_page,
+        fields: 'nickname',
+        include_fields: false
       });
 
       total = res.total;
@@ -149,6 +151,13 @@ const getUsers = async (userType: string) => {
       
       users = [...users, ...res.users]
     }
+
+    users.forEach(u => {
+      if (u.blocked) {
+        console.log('blocked user found');
+      }
+    })
+    
 
     const usersForCsv = users.map(u => ({
       academic_partner_id: u.app_metadata.academic_partner_id,
@@ -163,7 +172,9 @@ const getUsers = async (userType: string) => {
       name: u.name,
       role_id: u.app_metadata.role_id,
       user_id: u.user_id,
-      uuid: u.app_metadata.uuid
+      uuid: u.app_metadata.uuid,
+      updated_at: u.updated_at,
+      blocked: u.blocked ?? false
     }))
 
     const json2csvParser = await new Parser();
