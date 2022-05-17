@@ -109,7 +109,7 @@ const getUsersByRoleId = async (roleId: string) => {
   }
 }
 
-const getUsers = async () => {
+const getUsers = async (userType: string) => {
   try {
     logger.info('Starting getUsers')
 
@@ -124,8 +124,18 @@ const getUsers = async () => {
     const per_page = 100;
     let total = 0;
     let users: any[] = [];
-    const q = `identities.connection=model-m-users AND (app_metadata.role_id: ${process.env.ROLE_ID_GUILD_SUPER_USER} OR app_metadata.role_id: ${process.env.ROLE_ID_GUILD_ADMIN} OR app_metadata.role_id: ${process.env.ROLE_ID_GUILD_MEMBER} OR app_metadata.role_id: ${process.env.ROLE_ID_AP_MEMBER} OR app_metadata.role_id: ${process.env.ROLE_ID_AP_ADMIN} OR app_metadata.role_id: ${process.env.ROLE_ID_MULTI_AP_ADMIN})`
-    
+    let q = `identities.connection=model-m-users`
+    const guildUsersQuery = `app_metadata.role_id: ${process.env.ROLE_ID_GUILD_SUPER_USER} OR app_metadata.role_id: ${process.env.ROLE_ID_GUILD_ADMIN} OR app_metadata.role_id: ${process.env.ROLE_ID_GUILD_MEMBER}`;
+    const apUsersQuery =  `app_metadata.role_id: ${process.env.ROLE_ID_AP_MEMBER} OR app_metadata.role_id: ${process.env.ROLE_ID_AP_ADMIN} OR app_metadata.role_id: ${process.env.ROLE_ID_MULTI_AP_ADMIN}`
+    if (userType === 'guild') {
+      q = `${q} AND (${guildUsersQuery})`;
+    } else if (userType === 'ap') {
+      q = `${q} AND (${apUsersQuery})`;
+    } else {
+      q = `${q} AND (${guildUsersQuery} OR ${apUsersQuery})`
+    }
+
+
     while (page * per_page <= total) {
       const res = await management.getUsers({
         include_totals: true,
@@ -159,19 +169,20 @@ const getUsers = async () => {
     const json2csvParser = await new Parser();
     const csv = await json2csvParser.parse(usersForCsv);
 
-    const fileName = `${__dirname}/../dumps/${formatISO(new Date())}_guild_users.csv`
+    const fileName = `${__dirname}/../dumps/${formatISO(new Date())}_${userType ? userType : 'all'}_users.csv`
     fs.writeFileSync(fileName, csv, 'utf8');
 
     logger.info(`Successfully wrote ${fileName} to /dumps`)
 
     return;
 
-  } catch (error) {
-    logger.error(error);
+  } catch (error: any) {
+    logger.error(error.message)
     return;
   }
 }
 
-getUsers();
+const [type] = process.argv.slice(2);
+getUsers(type);
 // getUsersByRoleId(process.env.ROLE_ID_SPONSORSHIP as string)
 
