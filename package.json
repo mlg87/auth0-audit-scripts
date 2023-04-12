@@ -7,10 +7,12 @@
   "author": "Mason Goetz <masonlgoetz@gmail.com>",
   "license": "MIT",
   "dependencies": {
-    "auth0": "^2.37.0",
+    "auth0": "^3.3.0",
     "axios": "^0.24.0",
     "date-fns": "^2.28.0",
     "dotenv": "^10.0.0",
+    "graphql": "^16.6.0",
+    "graphql-request": "^5.2.0",
     "json2csv": "^5.0.6",
     "winston": "^3.7.2"
   },
@@ -18,7 +20,7 @@
     "start": "ts-node ./src/index.ts"
   },
   "devDependencies": {
-    "@types/auth0": "^2.34.7",
+    "@types/auth0": "^3.3.1",
     "@types/json2csv": "^5.0.3",
     "@types/node": "^16.11.9",
     "ts-node": "^10.4.0",

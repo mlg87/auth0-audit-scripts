@@ -105,3 +105,4 @@ dist
 
 # where the csvs get generated to
 dumps
+.DS_Store
